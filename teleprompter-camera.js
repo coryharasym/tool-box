@@ -7,7 +7,7 @@ const formats = [
 ];
 const cameraConstraints = {
   video: {facingMode: {ideal: 'user'}, width: {ideal: 1280}, height: {ideal: 720}},
-  audio: true,
+  audio: {channelCount: {ideal: 1}, echoCancellation: {ideal: false}},
 };
 
 function cameraError(error) {
@@ -26,6 +26,8 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
   const open = get('open-camera');
   const record = get('record-video');
   const status = get('camera-status');
+  const meter = get('microphone-level');
+  const audioNote = get('recording-audio-note');
   const stage = get('camera-stage');
   const preview = get('camera-preview');
   const playback = get('recording-playback');
@@ -41,11 +43,13 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
   let encoding;
   let skipEncoder = false;
   let lastFailedFormat;
+  let previousAudioSession;
 
   function refresh() {
     stage.hidden = !stream;
     reader.classList.toggle('camera-on', !!stream);
     review.hidden = !take || !!stream || !!active;
+    meter.hidden = !active?.meter || !!active.stopping;
     open.disabled = (opening && !stream) || !!active;
     open.textContent = stream ? 'Turn off camera' : (opening ? 'Opening camera…' : 'Open camera');
     record.hidden = !stream;
@@ -63,6 +67,10 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
     stream = null;
     preview.srcObject = null;
     current?.getTracks().forEach(track => track.stop());
+    if (previousAudioSession !== undefined) {
+      try { navigator.audioSession.type = previousAudioSession; } catch {}
+      previousAudioSession = undefined;
+    }
     refresh();
   }
 
@@ -137,7 +145,9 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
       url: URL.createObjectURL(file),
       downloadUrl: URL.createObjectURL(new Blob([file], {type: 'application/octet-stream'})),
     };
+    playback.muted = false;
     playback.src = take.url;
+    audioNote.hidden = !session.meter || session.heardAudio;
     openVideo.href = take.url;
     download.href = take.downloadUrl;
     download.download = file.name;
@@ -159,6 +169,12 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
     refresh();
     const loadingEncoder = skipEncoder ? null : loadVideoEncoder();
     try {
+      if (navigator.audioSession) {
+        try {
+          previousAudioSession = navigator.audioSession.type;
+          navigator.audioSession.type = 'play-and-record';
+        } catch {}
+      }
       const cameraStream = await navigator.mediaDevices.getUserMedia(cameraConstraints);
       if (id !== request || !reader.open) {
         cameraStream.getTracks().forEach(track => track.stop());
@@ -166,7 +182,7 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
       }
       stream = cameraStream;
       playback.pause();
-      preview.srcObject = cameraStream;
+      preview.srcObject = new MediaStream(cameraStream.getVideoTracks());
       preview.play().catch(() => {});
       for (const track of stream.getTracks()) {
         track.addEventListener('ended', () => {
@@ -193,7 +209,10 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
       }
       status.textContent = 'Camera ready.';
     } catch (error) {
-      if (id === request) status.textContent = cameraError(error);
+      if (id === request) {
+        releaseCamera();
+        status.textContent = cameraError(error);
+      }
     } finally {
       if (id === request) {
         opening = false;
@@ -205,7 +224,8 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
   function startRecording() {
     if (!stream || active) return;
     if (encoding) {
-      const session = {stopping: false, interrupted: false};
+      const session = {stopping: false, interrupted: false, meter: true, heardAudio: false, lastMeter: 0};
+      meter.value = 0;
       active = session;
       status.textContent = 'Starting recording…';
       refresh();
@@ -219,6 +239,15 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
             startScript();
           },
           onError() { recoverStartup(session); },
+          onLevel(level) {
+            if (session !== active || session.stopping) return;
+            if (level >= .002) session.heardAudio = true;
+            const now = performance.now();
+            if (now - session.lastMeter >= 80) {
+              meter.value = Math.min(1, level * 6);
+              session.lastMeter = now;
+            }
+          },
         });
         session.readyTimer = setTimeout(() => {
           if (session === active && !session.stopping) recoverStartup(session);

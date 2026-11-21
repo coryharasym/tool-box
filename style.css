@@ -183,6 +183,7 @@ audio { max-width: 100%; width: 100%; }
   border-radius: 7px;
   background: #101b2bee;
 }
+#microphone-level { width: 46px; height: 16px; }
 .camera-controls #camera-status:empty { display: none; }
 .camera-on .reader-controls label { flex: 0 1 110px; }
 .camera-on .reader-controls button, .camera-on .camera-controls button { padding-inline: 10px; }
