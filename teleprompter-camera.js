@@ -25,7 +25,6 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
   const reader = get('reader');
   const open = get('open-camera');
   const record = get('record-video');
-  const close = get('close-camera');
   const status = get('camera-status');
   const stage = get('camera-stage');
   const preview = get('camera-preview');
@@ -47,12 +46,13 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
     stage.hidden = !stream;
     reader.classList.toggle('camera-on', !!stream);
     review.hidden = !take || !!stream || !!active;
-    open.hidden = !!stream;
-    open.disabled = opening || !!active;
-    close.hidden = !stream || !!active;
+    open.disabled = (opening && !stream) || !!active;
+    open.textContent = stream ? 'Turn off camera' : (opening ? 'Opening camera…' : 'Open camera');
     record.hidden = !stream;
     record.disabled = opening || !!active?.stopping;
-    record.textContent = active ? (active.stopping ? 'Finishing…' : 'Stop recording') : 'Start recording';
+    record.textContent = active
+      ? (active.stopping ? 'Finishing…' : 'Stop recording')
+      : (opening ? 'Getting ready…' : 'Start recording');
   }
 
   function releaseCamera() {
@@ -210,17 +210,18 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
       status.textContent = 'Starting recording…';
       refresh();
       try {
-        session.encoder = encoding({
+        session.encoder = encoding(preview, {
           onReady() {
             if (session !== active || session.stopping) return;
             clearTimeout(session.readyTimer);
+            session.started = true;
             status.textContent = 'Recording';
             startScript();
           },
-          onError() { failEncoding(session); },
+          onError() { recoverStartup(session); },
         });
         session.readyTimer = setTimeout(() => {
-          if (session === active && !session.stopping) failEncoding(session);
+          if (session === active && !session.stopping) recoverStartup(session);
         }, 7000);
         return;
       } catch {
@@ -229,7 +230,30 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
         skipEncoder = true;
       }
     }
-    if (typeof MediaRecorder !== 'function') {
+    startNativeRecording();
+  }
+
+  function recoverStartup(session) {
+    if (session !== active) return;
+    if (session.stopping) {
+      failEncoding(session);
+      return;
+    }
+    if (session.started) {
+      session.interrupted = true;
+      stopRecording();
+      return;
+    }
+    clearTimeout(session.readyTimer);
+    session.encoder?.cancel();
+    encoding = null;
+    skipEncoder = true;
+    active = null;
+    startNativeRecording();
+  }
+
+  function startNativeRecording() {
+    if (!stream || typeof MediaRecorder !== 'function') {
       status.textContent = 'No compatible video recorder is available in this browser.';
       refresh();
       return;
@@ -259,15 +283,19 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
         // The browser may advertise a format that it cannot start with this camera.
       }
     }
-    status.textContent = 'Video recording could not start. Close the camera and try again.';
+    status.textContent = 'Video recording could not start. Turn the camera off and try again.';
+    refresh();
   }
 
-  open.addEventListener('click', openCamera);
-  record.addEventListener('click', () => active ? stopRecording() : startRecording());
-  close.addEventListener('click', () => {
-    releaseCamera();
-    status.textContent = '';
+  open.addEventListener('click', () => {
+    if (stream) {
+      releaseCamera();
+      status.textContent = '';
+    } else {
+      openCamera();
+    }
   });
+  record.addEventListener('click', () => active ? stopRecording() : startRecording());
   share.addEventListener('click', async () => {
     if (!take) return;
     try {

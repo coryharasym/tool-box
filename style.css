@@ -76,7 +76,7 @@ button:disabled { opacity: .45; cursor: default; }
 .check { display: flex; align-items: center; gap: 7px; min-height: 34px; }
 audio { max-width: 100%; width: 100%; }
 #reader { position: fixed; inset: 0; margin: 0; max-width: none; max-height: none; width: 100%; height: 100%; height: 100dvh; overflow: hidden; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); border: 0; background: #080e18; color: #f7f8fc; }
-#reader[open] { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; }
+#reader[open] { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
 #reader::backdrop { background: #080e18; }
 .reader-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; padding: 10px clamp(10px, 4vw, 36px); background: #142238; }
 .reader-controls label { display: flex; align-items: center; gap: 8px; flex: 1 1 105px; }
@@ -154,7 +154,7 @@ audio { max-width: 100%; width: 100%; }
   object-position: center;
   transform: scaleX(-1);
 }
-.camera-on .reader-controls, .camera-on .camera-controls {
+.camera-on .reader-controls, .camera-controls {
   position: absolute;
   z-index: 2;
   left: max(8px, env(safe-area-inset-left));
@@ -168,7 +168,22 @@ audio { max-width: 100%; width: 100%; }
   background: #101b2bd9;
 }
 .camera-on .reader-controls { top: max(8px, env(safe-area-inset-top)); }
-.camera-on .camera-controls { bottom: max(8px, env(safe-area-inset-bottom)); justify-content: center; }
+.camera-controls {
+  bottom: max(8px, env(safe-area-inset-bottom));
+  right: auto;
+  margin-inline: 0;
+}
+.camera-controls #camera-status {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 5px);
+  width: max-content;
+  max-width: min(78vw, 420px);
+  padding: 5px 8px;
+  border-radius: 7px;
+  background: #101b2bee;
+}
+.camera-controls #camera-status:empty { display: none; }
 .camera-on .reader-controls label { flex: 0 1 110px; }
 .camera-on .reader-controls button, .camera-on .camera-controls button { padding-inline: 10px; }
 .camera-on #reader-scroll {
