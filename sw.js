@@ -1,5 +1,5 @@
-const CACHE = 'toolbox-shell-v10';
-const SHELL = ['./', './index.html', './style.css', './app.js', './audio.js', './vendor/qrcode.js', './script-import.js', './teleprompter-camera.js', './video-capture.js', './microphone-worklet.js', './vendor/mediabunny.min.mjs', './vendor/fflate.js',
+const CACHE = 'toolbox-shell-v11';
+const SHELL = ['./', './index.html', './style.css', './app.js', './audio.js', './vendor/qrcode.js', './script-import.js', './teleprompter-camera.js', './video-capture.js', './microphone-worklet.js', './microphone-check.js', './vendor/mediabunny.min.mjs', './vendor/fflate.js',
   './picture-scan/pdf-viewer.js', './picture-scan/vendor/pdfjs/pdf.min.mjs', './picture-scan/vendor/pdfjs/pdf.worker.min.mjs',
   './picture-scan/vendor/pdfjs/resource-index.js', './picture-scan/vendor/pdfjs/resources.bin', './icon.svg', './manifest.webmanifest', './toolbox-nav.js', './toolbox-nav.css',
   './apple-touch-icon.png', './icon-192.png', './icon-512.png'];

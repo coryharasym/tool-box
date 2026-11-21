@@ -135,11 +135,16 @@
       <div id="reader-scroll" tabindex="0" aria-label="Script"><div id="reader-text"></div></div>
       <div class="camera-controls" aria-label="Recording controls">
         <button id="open-camera" type="button">Open camera</button>
+        <button id="test-microphone" type="button">Test microphone</button>
         <button id="record-video" class="record-button" type="button" hidden>Start recording</button>
         <meter id="microphone-level" min="0" max="1" value="0" aria-label="Microphone level" hidden></meter>
         <span id="camera-status" role="status" aria-live="polite"></span>
       </div>
     </div>
+    <section id="microphone-review" class="recording-review" aria-label="Microphone test" hidden>
+      <audio id="microphone-playback" controls aria-label="Microphone test recording"></audio>
+      <div class="stack"><h2>Microphone test</h2><p>Play your three-second sample to check whether you can hear your voice.</p></div>
+    </section>
     <section id="recording-review" class="recording-review" aria-label="Latest recording" hidden>
       <video id="recording-playback" controls playsinline preload="metadata" aria-label="Recorded video"></video>
       <div class="stack">

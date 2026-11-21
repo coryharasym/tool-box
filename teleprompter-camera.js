@@ -1,3 +1,4 @@
+import {checkMicrophone} from './microphone-check.js';
 import {loadVideoEncoder, prepareVideoEncoder} from './video-capture.js';
 
 const formats = [
@@ -27,6 +28,9 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
   const record = get('record-video');
   const status = get('camera-status');
   const meter = get('microphone-level');
+  const testMicrophone = get('test-microphone');
+  const testReview = get('microphone-review');
+  const testPlayback = get('microphone-playback');
   const audioNote = get('recording-audio-note');
   const stage = get('camera-stage');
   const preview = get('camera-preview');
@@ -44,13 +48,29 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
   let skipEncoder = false;
   let lastFailedFormat;
   let previousAudioSession;
+  let microphoneTest;
+  let testUrl;
+
+  function clearMicrophoneTest() {
+    microphoneTest?.abort();
+    microphoneTest = null;
+    testPlayback.pause();
+    testPlayback.removeAttribute('src');
+    if (testUrl) {
+      URL.revokeObjectURL(testUrl);
+      testUrl = null;
+    }
+  }
 
   function refresh() {
     stage.hidden = !stream;
     reader.classList.toggle('camera-on', !!stream);
-    review.hidden = !take || !!stream || !!active;
+    review.hidden = !take || !!stream || !!active || !!testUrl;
+    testReview.hidden = !testUrl || !!stream;
+    testMicrophone.hidden = !!stream;
+    testMicrophone.disabled = opening || !!active || !!microphoneTest;
     meter.hidden = !active?.meter || !!active.stopping;
-    open.disabled = (opening && !stream) || !!active;
+    open.disabled = (opening && !stream) || !!active || !!microphoneTest;
     open.textContent = stream ? 'Turn off camera' : (opening ? 'Opening camera…' : 'Open camera');
     record.hidden = !stream;
     record.disabled = opening || !!active?.stopping;
@@ -163,6 +183,7 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
       status.textContent = 'Video recording is unavailable in this browser. Try opening Toolbox in Safari or Chrome over HTTPS.';
       return;
     }
+    clearMicrophoneTest();
     const id = ++request;
     opening = true;
     status.textContent = 'Waiting for camera and microphone…';
@@ -324,6 +345,33 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
       openCamera();
     }
   });
+  testMicrophone.addEventListener('click', async () => {
+    if (stream || opening || active || microphoneTest) return;
+    clearMicrophoneTest();
+    const controller = new AbortController();
+    microphoneTest = controller;
+    status.textContent = 'Waiting for microphone permission…';
+    refresh();
+    try {
+      const sample = await checkMicrophone({
+        signal: controller.signal,
+        onStart() { if (!controller.signal.aborted) status.textContent = 'Speak now. Recording a three-second sample…'; },
+      });
+      if (controller.signal.aborted) return;
+      testUrl = URL.createObjectURL(sample);
+      testPlayback.src = testUrl;
+      status.textContent = 'Microphone sample ready.';
+    } catch (error) {
+      if (!controller.signal.aborted) status.textContent = error.name === 'NotAllowedError'
+        ? 'Allow microphone access for Toolbox, then try again.'
+        : error.message;
+    } finally {
+      if (microphoneTest === controller) {
+        microphoneTest = null;
+        refresh();
+      }
+    }
+  });
   record.addEventListener('click', () => active ? stopRecording() : startRecording());
   share.addEventListener('click', async () => {
     if (!take) return;
@@ -335,10 +383,12 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
   });
   reader.addEventListener('close', () => {
     playback.pause();
+    clearMicrophoneTest();
     releaseCamera();
     status.textContent = '';
   });
   window.addEventListener('pagehide', () => {
+    clearMicrophoneTest();
     if (active?.encoder) {
       active.encoder.cancel();
       clearSession(active);
