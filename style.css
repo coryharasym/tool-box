@@ -75,8 +75,8 @@ button:disabled { opacity: .45; cursor: default; }
 .setting-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 15px; }
 .check { display: flex; align-items: center; gap: 7px; min-height: 34px; }
 audio { max-width: 100%; width: 100%; }
-#reader { position: fixed; inset: 0; margin: 0; max-width: none; max-height: none; width: 100%; height: 100%; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); border: 0; background: #080e18; color: #f7f8fc; }
-#reader[open] { display: grid; grid-template-rows: auto minmax(0, 1fr); }
+#reader { position: fixed; inset: 0; margin: 0; max-width: none; max-height: none; width: 100%; height: 100%; height: 100dvh; overflow: hidden; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); border: 0; background: #080e18; color: #f7f8fc; }
+#reader[open] { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; }
 #reader::backdrop { background: #080e18; }
 .reader-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; padding: 10px clamp(10px, 4vw, 36px); background: #142238; }
 .reader-controls label { display: flex; align-items: center; gap: 8px; flex: 1 1 105px; }
@@ -115,7 +115,6 @@ audio { max-width: 100%; width: 100%; }
   .print-sign .sheet.cards p { font-size: 9pt; }
 }
 
-#reader[open] { grid-template-rows: auto auto minmax(0, 1fr) auto; }
 .camera-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 7px clamp(10px, 4vw, 36px); background: #142238; border-top: 1px solid #2e3d52; }
 .camera-controls #camera-status { font-size: .85rem; color: #e3eaf7; }
 .camera-controls .record-button { background: #a32b3a; border-color: #a32b3a; color: #fff; }
@@ -123,9 +122,7 @@ audio { max-width: 100%; width: 100%; }
 .reader-stage { position: relative; min-height: 0; overflow: hidden; }
 .camera-stage { position: absolute; inset: 0; display: grid; place-items: center; overflow: hidden; }
 .camera-stage::after { content: ""; position: absolute; inset: 0; background: linear-gradient(#080e18b9, #080e1820); }
-.camera-stage video { width: 100%; height: 100%; object-fit: contain; transform: scaleX(-1); }
 #reader-scroll { position: relative; height: 100%; }
-.camera-on #reader-text { padding-top: 8svh; text-shadow: 0 2px 6px #000, 0 0 25px #000; }
 .recording-review { display: flex; align-items: center; gap: 16px; padding: 12px clamp(10px, 4vw, 36px); background: #142238; border-top: 1px solid #2e3d52; }
 .recording-review h2 { font-size: 1rem; }
 .recording-review p { font-size: .85rem; }
@@ -144,3 +141,56 @@ audio { max-width: 100%; width: 100%; }
 .clip-sequence li { padding: 9px 0; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
 .clip-sequence li .actions { margin-top: 5px; }
 .clip-sequence li .actions button { min-height: 40px; }
+
+#reader.camera-on { padding: 0; }
+.camera-on .reader-stage { position: absolute; inset: 0; }
+.camera-on .camera-stage video {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transform: scaleX(-1);
+}
+.camera-on .reader-controls, .camera-on .camera-controls {
+  position: absolute;
+  z-index: 2;
+  left: max(8px, env(safe-area-inset-left));
+  right: max(8px, env(safe-area-inset-right));
+  width: fit-content;
+  max-width: calc(100% - max(8px, env(safe-area-inset-left)) - max(8px, env(safe-area-inset-right)));
+  margin-inline: auto;
+  padding: 5px 8px;
+  border: 1px solid #ffffff33;
+  border-radius: 13px;
+  background: #101b2bd9;
+}
+.camera-on .reader-controls { top: max(8px, env(safe-area-inset-top)); }
+.camera-on .camera-controls { bottom: max(8px, env(safe-area-inset-bottom)); justify-content: center; }
+.camera-on .reader-controls label { flex: 0 1 110px; }
+.camera-on .reader-controls button, .camera-on .camera-controls button { padding-inline: 10px; }
+.camera-on #reader-scroll {
+  position: absolute;
+  inset: 0;
+  height: auto;
+  padding-inline: max(19px, env(safe-area-inset-left), 8vw) max(19px, env(safe-area-inset-right), 8vw);
+}
+.camera-on #reader-text { padding-top: clamp(78px, 21dvh, 130px); padding-bottom: max(160px, 58svh); text-shadow: 0 2px 6px #000, 0 0 25px #000; }
+.recording-review .button-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid #b8c4d7;
+  border-radius: 9px;
+  background: #fff;
+  color: var(--ink);
+  font-size: .92rem;
+  font-weight: 670;
+  text-decoration: none;
+}
+@media (max-width: 420px) {
+  .camera-on .reader-controls label { flex-basis: 85px; }
+}

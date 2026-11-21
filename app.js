@@ -228,7 +228,7 @@ get('script-file').addEventListener('change', async event => {
       : 'This document could not be read.';
   }
 });
-const camera = bindTeleprompterCamera(get, {startScript, pauseScript, download});
+const camera = bindTeleprompterCamera(get, {startScript, pauseScript});
 function closeReader() {
   if (camera.stopForExit()) return;
   reader.close();

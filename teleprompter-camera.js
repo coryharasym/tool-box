@@ -1,5 +1,4 @@
 const formats = [
-  'video/mp4;codecs=avc1,mp4a.40.2',
   'video/mp4',
   'video/webm;codecs=vp8,opus',
   'video/webm',
@@ -20,7 +19,7 @@ function cameraError(error) {
   return 'The camera could not be opened. Try again.';
 }
 
-export function bindTeleprompterCamera(get, {startScript, pauseScript, download}) {
+export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
   const reader = get('reader');
   const open = get('open-camera');
   const record = get('record-video');
@@ -31,6 +30,8 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript, download}
   const playback = get('recording-playback');
   const review = get('recording-review');
   const share = get('share-video');
+  const download = get('download-video');
+  const openVideo = get('open-video');
   let stream;
   let active;
   let take;
@@ -40,7 +41,7 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript, download}
   function refresh() {
     stage.hidden = !stream;
     reader.classList.toggle('camera-on', !!stream);
-    review.hidden = !take || !!stream;
+    review.hidden = !take || !!stream || !!active;
     open.hidden = !!stream;
     open.disabled = opening || !!active;
     close.hidden = !stream || !!active;
@@ -60,36 +61,62 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript, download}
   }
 
   function stopRecording() {
-    if (!active || active.stopping) return;
+    const session = active;
+    if (!session || session.stopping) return;
     pauseScript();
-    active.stopping = true;
+    session.stopping = true;
     status.textContent = 'Finishing recording…';
-    if (active.recorder.state !== 'inactive') active.recorder.stop();
     refresh();
+
+    // Allow the recorder to flush normally, but release the tracks if it stalls.
+    session.releaseTimer = setTimeout(() => {
+      if (session === active) releaseCamera();
+    }, 600);
+    session.finishTimer = setTimeout(() => {
+      session.interrupted = true;
+      saveTake(session);
+    }, 5000);
+    if (session.recorder.state === 'inactive') return;
+    try { session.recorder.requestData(); } catch {}
+    try {
+      session.recorder.stop();
+    } catch {
+      session.interrupted = true;
+      releaseCamera();
+    }
   }
 
   function saveTake(session) {
     if (session !== active) return;
+    clearTimeout(session.releaseTimer);
+    clearTimeout(session.finishTimer);
     pauseScript();
     active = null;
     releaseCamera();
     if (session.chunks.length === 0) {
-      status.textContent = 'No video was captured. Try recording for a little longer.';
+      status.textContent = 'The browser returned no video. Open the camera and record a new take.';
       return;
     }
-    const mime = (session.recorder.mimeType || session.chunks[0].type || 'video/webm').split(';')[0];
+    const mime = (session.chunks[0].type || session.recorder.mimeType || 'video/webm').split(';')[0];
     const extension = mime === 'video/mp4' ? 'mp4' : 'webm';
-    const blob = new Blob(session.chunks, {type: mime});
     const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-    if (take) URL.revokeObjectURL(take.url);
+    const file = new File(session.chunks, `teleprompter-${stamp}.${extension}`, {type: mime});
+    if (take) {
+      URL.revokeObjectURL(take.url);
+      URL.revokeObjectURL(take.downloadUrl);
+    }
     take = {
-      file: new File([blob], `teleprompter-${stamp}.${extension}`, {type: mime}),
-      url: URL.createObjectURL(blob),
+      file,
+      url: URL.createObjectURL(file),
+      downloadUrl: URL.createObjectURL(new Blob([file], {type: 'application/octet-stream'})),
     };
     playback.src = take.url;
+    openVideo.href = take.url;
+    download.href = take.downloadUrl;
+    download.download = file.name;
     share.hidden = true;
-    try { share.hidden = !navigator.canShare?.({files: [take.file]}); } catch {}
-    status.textContent = session.interrupted ? 'Recording was interrupted. Review and save the captured portion.' : 'Recording ready to review.';
+    try { share.hidden = !navigator.canShare?.({files: [file]}); } catch {}
+    status.textContent = session.interrupted ? 'Recording was interrupted. Check the video before saving it.' : 'Recording ready to save.';
     refresh();
   }
 
@@ -171,15 +198,12 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript, download}
     releaseCamera();
     status.textContent = '';
   });
-  get('download-video').addEventListener('click', () => {
-    if (take) download(take.file, take.file.name);
-  });
   share.addEventListener('click', async () => {
     if (!take) return;
     try {
       await navigator.share({files: [take.file]});
     } catch (error) {
-      if (error.name !== 'AbortError') status.textContent = 'Sharing is unavailable. Use Download video to save the take.';
+      if (error.name !== 'AbortError') status.textContent = 'Sharing is unavailable. Try Download video, or open the video and use your browser’s share menu.';
     }
   });
   reader.addEventListener('close', () => {
