@@ -135,3 +135,12 @@ audio { max-width: 100%; width: 100%; }
   .recording-review video { width: 100%; max-height: 23svh; }
   .recording-review .stack { gap: 7px; }
 }
+
+.sequence-panel { margin-top: 16px; }
+.sequence-panel h2 { font-size: 1.2rem; }
+.source-actions { align-items: end; }
+.source-actions .source-field { flex: 1 1 200px; min-width: 0; }
+.clip-sequence { margin: 0; padding-inline-start: 26px; }
+.clip-sequence li { padding: 9px 0; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.clip-sequence li .actions { margin-top: 5px; }
+.clip-sequence li .actions button { min-height: 40px; }

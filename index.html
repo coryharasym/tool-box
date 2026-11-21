@@ -27,7 +27,7 @@
         <a class="tool cyan" href="./picture-scan/"><span class="tile-icon" aria-hidden="true">⌑</span><h2>Picture Scan</h2><p>Scan paper, organize PDF pages, and combine documents.</p><span class="arrow" aria-hidden="true">↗</span></a>
         <a class="tool blue" href="#qr"><span class="tile-icon" aria-hidden="true">▦</span><h2>QR Sign Maker</h2><p>Turn a link into a printable sign or a sheet of cards.</p><span class="arrow" aria-hidden="true">↗</span></a>
         <a class="tool violet" href="#teleprompter"><span class="tile-icon" aria-hidden="true">▤</span><h2>Teleprompter</h2><p>Read a scrolling script at your own pace.</p><span class="arrow" aria-hidden="true">↗</span></a>
-        <a class="tool gold" href="#audio"><span class="tile-icon" aria-hidden="true">∿</span><h2>Audio Clip Cutter</h2><p>Preview a section of a recording and save it as a WAV file.</p><span class="arrow" aria-hidden="true">↗</span></a>
+        <a class="tool gold" href="#audio"><span class="tile-icon" aria-hidden="true">∿</span><h2>Audio Clip Cutter</h2><p>Trim a recording or join several clips into one WAV file.</p><span class="arrow" aria-hidden="true">↗</span></a>
       </div>
     </section>
 
@@ -72,11 +72,15 @@
     </section>
 
     <section id="audio" data-page hidden>
-      <header class="intro"><h1>Audio Clip Cutter</h1><p>Choose a recording, set the start and end, and export the clip as a WAV file.</p></header>
+      <header class="intro"><h1>Audio Clip Cutter</h1><p>Trim recordings, arrange clips in order, and download a single WAV.</p></header>
       <div class="panel stack">
-        <label class="file-label">Choose audio file <input id="audio-file" type="file" accept="audio/*,.m4a,.mp3,.wav,.aac,.ogg,.flac,.webm,.mp4"></label>
+        <label class="file-label">Choose audio files <input id="audio-file" type="file" multiple accept="audio/*,.m4a,.mp3,.wav,.aac,.ogg,.flac,.webm,.mp4"></label>
         <p id="audio-status" class="status" role="status"></p>
         <div id="audio-editor" hidden class="stack">
+          <div class="actions source-actions">
+            <div class="source-field"><label for="audio-source">Recording</label><select id="audio-source"></select></div>
+            <button id="audio-remove-source" type="button">Remove recording</button>
+          </div>
           <p id="audio-name" class="file-name"></p>
           <audio id="audio-original" controls preload="metadata" aria-label="Original recording"></audio>
           <div class="setting-grid">
@@ -84,10 +88,20 @@
             <div class="trim-control"><label>End (seconds) <input id="audio-end" type="number" min="0" step="any"></label><input id="end-slider" type="range" min="0" step=".01" aria-label="Clip end position"></div>
           </div>
           <p id="clip-length" class="file-name"></p>
-          <div class="actions"><button id="audio-preview" type="button">Preview clip</button><button id="audio-export" class="primary" type="button">Download WAV clip</button></div>
+          <div class="actions"><button id="audio-preview" type="button">Preview clip</button><button id="audio-export" type="button">Download WAV clip</button><button id="audio-add" class="primary" type="button">Add clip to sequence</button></div>
           <audio id="audio-clipped" controls aria-label="Selected audio clip" hidden></audio>
         </div>
       </div>
+      <section id="audio-sequence" class="panel stack sequence-panel" aria-labelledby="sequence-heading" hidden>
+        <h2 id="sequence-heading">Clip sequence</h2>
+        <ol id="clip-sequence" class="clip-sequence"></ol>
+        <p id="sequence-status" class="status" role="status"></p>
+        <div class="actions">
+          <button id="sequence-preview" type="button">Preview sequence</button>
+          <button id="sequence-export" class="primary" type="button">Download joined WAV</button>
+        </div>
+        <audio id="sequence-player" controls aria-label="Joined audio clips" hidden></audio>
+      </section>
     </section>
   </main>
 
