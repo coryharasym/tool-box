@@ -7,7 +7,36 @@ export function loadVideoEncoder() {
   return import('./vendor/mediabunny.min.mjs').catch(() => null);
 }
 
-function startCapture(media, config, stream, preview, {onReady, onError}) {
+async function connectMicrophone(context, input, onSamples, stopped) {
+  let node;
+  if (context.audioWorklet && typeof AudioWorkletNode === 'function') {
+    try {
+      await context.audioWorklet.addModule(new URL('./microphone-worklet.js', import.meta.url));
+      if (stopped()) return null;
+      node = new AudioWorkletNode(context, 'toolbox-microphone', {
+        channelCount: 1,
+        channelCountMode: 'explicit',
+        outputChannelCount: [1],
+      });
+      node.port.onmessage = event => onSamples(event.data);
+    } catch {
+      // Some embedded browsers disallow audio worklets.
+    }
+  }
+  if (stopped()) return null;
+  if (!node) {
+    node = context.createScriptProcessor(2048, 1, 1);
+    node.onaudioprocess = event => {
+      event.outputBuffer.getChannelData(0).fill(0);
+      onSamples(new Float32Array(event.inputBuffer.getChannelData(0)));
+    };
+  }
+  input.connect(node);
+  node.connect(context.destination);
+  return node;
+}
+
+function startCapture(media, config, stream, preview, {onReady, onError, onLevel}) {
   const target = new media.BufferTarget();
   const output = new media.Output({format: new config.Format(), target});
   const canvas = document.createElement('canvas');
@@ -28,6 +57,7 @@ function startCapture(media, config, stream, preview, {onReady, onError}) {
   const audio = new media.AudioSampleSource({
     codec: config.audioCodec,
     bitrate: audioBitrate,
+    transform: {sampleRate},
     onEncodedPacket() { if (!hasAudio) { hasAudio = true; ready(); } },
   });
   output.addVideoTrack(video);
@@ -35,9 +65,9 @@ function startCapture(media, config, stream, preview, {onReady, onError}) {
 
   // Start the visible preview and microphone context in the Record button's gesture.
   const AudioContext = window.AudioContext || window.webkitAudioContext;
-  const context = new AudioContext({sampleRate});
+  const context = new AudioContext();
   const input = context.createMediaStreamSource(new MediaStream(stream.getAudioTracks()));
-  const microphone = context.createScriptProcessor(2048, 1, 1);
+  let microphone;
   const previewPlaying = preview.play();
   const resumed = context.resume();
   let frame;
@@ -65,24 +95,27 @@ function startCapture(media, config, stream, preview, {onReady, onError}) {
     } catch (error) { onError(error); }
   }
 
-  function feedAudio(event) {
+  function feedAudio(samples) {
     if (stopped) return;
     if (audioWrites.size > 30) {
       onError(new Error('Audio encoding could not keep up.'));
       return;
     }
-    const buffer = event.inputBuffer;
-    audioTime ??= Math.max(0, (performance.now() - startedAt) / 1000 - buffer.duration);
+    const duration = samples.length / context.sampleRate;
+    audioTime ??= Math.max(0, (performance.now() - startedAt) / 1000 - duration);
+    let sum = 0;
+    for (const value of samples) sum += value * value;
+    onLevel(Math.sqrt(sum / samples.length));
     let sample;
     try {
       sample = new media.AudioSample({
-        data: new Float32Array(buffer.getChannelData(0)),
+        data: samples,
         format: 'f32',
         numberOfChannels: 1,
-        sampleRate: buffer.sampleRate,
+        sampleRate: context.sampleRate,
         timestamp: audioTime,
       });
-      audioTime += buffer.duration;
+      audioTime += duration;
       const write = audio.add(sample).catch(onError).finally(() => {
         sample.close();
         audioWrites.delete(write);
@@ -98,19 +131,18 @@ function startCapture(media, config, stream, preview, {onReady, onError}) {
     if (stopped) return;
     stopped = true;
     cancelAnimationFrame(frame);
-    microphone.onaudioprocess = null;
+    if (microphone?.port) microphone.port.close();
+    else if (microphone) microphone.onaudioprocess = null;
     input.disconnect();
-    microphone.disconnect();
+    microphone?.disconnect();
     context.close().catch(() => {});
   }
 
-  const started = Promise.all([output.start(), previewPlaying, resumed]).then(() => {
+  const started = Promise.all([output.start(), previewPlaying, resumed]).then(async () => {
     if (stopped) return;
     startedAt = performance.now();
-    microphone.onaudioprocess = feedAudio;
-    input.connect(microphone);
-    // The processor's zeroed output keeps the graph running without audible monitoring.
-    microphone.connect(context.destination);
+    microphone = await connectMicrophone(context, input, feedAudio, () => stopped);
+    if (stopped) return;
     frame = requestAnimationFrame(feedVideo);
   });
   started.catch(onError);

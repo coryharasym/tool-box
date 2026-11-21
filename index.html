@@ -136,6 +136,7 @@
       <div class="camera-controls" aria-label="Recording controls">
         <button id="open-camera" type="button">Open camera</button>
         <button id="record-video" class="record-button" type="button" hidden>Start recording</button>
+        <meter id="microphone-level" min="0" max="1" value="0" aria-label="Microphone level" hidden></meter>
         <span id="camera-status" role="status" aria-live="polite"></span>
       </div>
     </div>
@@ -148,6 +149,7 @@
           <a id="download-video" class="button-link" download>Download video</a>
           <a id="open-video" class="button-link" target="_blank" rel="noopener">Open video</a>
         </div>
+        <p id="recording-audio-note" hidden>The microphone level stayed near zero. Play the take to check the sound before saving.</p>
         <p>Save the video before reloading or leaving Toolbox.</p>
       </div>
     </section>
