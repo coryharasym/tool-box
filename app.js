@@ -131,6 +131,13 @@ const readerScroll = get('reader-scroll');
 const readerText = get('reader-text');
 const play = get('play-script');
 const settings = {script: get('script'), speed: get('script-speed'), size: get('script-size'), mirror: get('script-mirror')};
+const demo = [
+  'Welcome. Take a breath and look toward the camera.',
+  'Speak at the pace you would use in a conversation. Let each thought land before you move on.',
+  'If the words are getting ahead of you, pause the scroll or lower the speed at the top.',
+  'Keep your shoulders relaxed. Look at the lens between paragraphs.',
+  'When you are ready for another take, press Restart.',
+].join('\n\n');
 let frame = null;
 let previous = null;
 let remainder = 0;
@@ -178,14 +185,45 @@ get('reader-speed').addEventListener('input', event => {
   settings.speed.value = event.target.value;
   get('speed-display').value = settings.speed.value + ' px/s';
 });
-get('open-reader').addEventListener('click', () => {
-  readerText.textContent = settings.script.value.trim();
+function openReader(script) {
+  readerText.textContent = script.trim();
   readerText.style.fontSize = settings.size.value + 'px';
   readerText.classList.toggle('mirrored', settings.mirror.checked);
   get('reader-speed').value = settings.speed.value;
   reader.showModal();
   readerScroll.scrollTop = 0;
   readerScroll.focus();
+}
+
+get('open-reader').addEventListener('click', () => openReader(settings.script.value));
+get('compose-script').addEventListener('click', () => settings.script.focus());
+get('demo-script').addEventListener('click', () => openReader(demo));
+
+const scriptStatus = get('script-status');
+let importRequest = 0;
+get('script-file').addEventListener('change', async event => {
+  const input = event.currentTarget;
+  const file = input.files[0];
+  input.value = '';
+  if (!file) return;
+  const request = ++importRequest;
+  scriptStatus.textContent = 'Opening ' + file.name + '…';
+  try {
+    const {readScript} = await import('./script-import.js');
+    const script = await readScript(file);
+    if (request !== importRequest) return;
+    if (settings.script.value.trim() && !window.confirm('Replace the current script with ' + file.name + '?')) {
+      scriptStatus.textContent = 'Import cancelled.';
+      return;
+    }
+    settings.script.value = script;
+    get('open-reader').disabled = false;
+    scriptStatus.textContent = 'Imported ' + file.name + '.';
+  } catch (error) {
+    if (request === importRequest) scriptStatus.textContent = error instanceof Error
+      ? error.message
+      : 'This document could not be read.';
+  }
 });
 get('close-reader').addEventListener('click', () => reader.close());
 reader.addEventListener('close', pauseScript);

@@ -51,8 +51,16 @@
     </section>
 
     <section id="teleprompter" data-page hidden>
-      <header class="intro"><h1>Teleprompter</h1><p>Paste your script and adjust the pace before you start reading.</p></header>
+      <header class="intro"><h1>Teleprompter</h1><p>Write, paste, or import a script, then adjust the pace before you start reading.</p></header>
       <div class="panel stack">
+        <div class="actions script-actions">
+          <button id="compose-script" type="button">Compose a script</button>
+          <label class="file-action">Import a document<input id="script-file" type="file" aria-describedby="script-formats"></label>
+          <button id="demo-script" type="button">Try a demo script</button>
+          <a class="script-later" href="#home">Add a script later</a>
+        </div>
+        <p id="script-formats" class="file-name">Word (.docx), PDF with selectable text, TXT, or RTF.</p>
+        <p id="script-status" class="status" role="status"></p>
         <label>Script <textarea id="script" rows="10" placeholder="Paste or type your script here"></textarea></label>
         <div class="setting-grid">
           <label>Text size <output id="size-display">48 px</output><input id="script-size" type="range" min="24" max="96" value="48"></label>

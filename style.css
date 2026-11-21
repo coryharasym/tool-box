@@ -48,8 +48,12 @@ input:not([type="checkbox"], [type="range"]), select, textarea { margin-top: 5px
 textarea { resize: vertical; min-height: 135px; }
 input[type="range"] { accent-color: var(--blue); margin: 8px 0 0; min-height: 25px; }
 output { color: var(--muted); font-weight: 480; margin-left: 6px; }
-button { min-height: 44px; padding: 8px 14px; border: 1px solid #b8c4d7; border-radius: 9px; background: #fff; color: var(--ink); font-size: .92rem; font-weight: 670; }
-button:hover:enabled { border-color: var(--blue); }
+button, .file-action { min-height: 44px; padding: 8px 14px; border: 1px solid #b8c4d7; border-radius: 9px; background: #fff; color: var(--ink); font-size: .92rem; font-weight: 670; }
+button:hover:enabled, .file-action:hover { border-color: var(--blue); }
+.file-action { display: inline-flex; align-items: center; position: relative; cursor: pointer; }
+.file-action input { position: absolute; inset: 0; height: 100%; margin: 0; opacity: 0; }
+.script-later { align-self: center; padding: 8px 4px; font-size: .9rem; }
+.file-action:focus-within { outline: 3px solid #3670d5; outline-offset: 3px; }
 button:disabled { opacity: .45; cursor: default; }
 .primary { background: var(--blue); color: #fff; border-color: var(--blue); }
 .primary:hover:enabled { background: var(--blue-dark); }

@@ -1,5 +1,7 @@
-const CACHE = 'toolbox-shell-v1';
-const SHELL = ['./', './index.html', './style.css', './app.js', './audio.js', './vendor/qrcode.js', './icon.svg', './manifest.webmanifest'];
+const CACHE = 'toolbox-shell-v2';
+const SHELL = ['./', './index.html', './style.css', './app.js', './audio.js', './vendor/qrcode.js', './script-import.js', './vendor/fflate.js',
+  './picture-scan/pdf-viewer.js', './picture-scan/vendor/pdfjs/pdf.min.mjs', './picture-scan/vendor/pdfjs/pdf.worker.min.mjs',
+  './picture-scan/vendor/pdfjs/resource-index.js', './picture-scan/vendor/pdfjs/resources.bin', './icon.svg', './manifest.webmanifest'];
 const urls = new Set(SHELL.map(path => new URL(path, self.registration.scope).href));
 
 self.addEventListener('install', event => {
@@ -12,14 +14,16 @@ self.addEventListener('activate', event => {
     .map(key => caches.delete(key)))).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET' || !urls.has(event.request.url)) return;
+  const url = new URL(event.request.url);
+  url.hash = '';
+  if (event.request.method !== 'GET' || !urls.has(url.href)) return;
   event.respondWith(caches.open(CACHE).then(async cache => {
     try {
       const response = await fetch(event.request);
-      if (response.ok) await cache.put(event.request, response.clone());
+      if (response.ok) await cache.put(url.href, response.clone());
       return response;
     } catch {
-      return cache.match(event.request);
+      return cache.match(url.href);
     }
   }));
 });

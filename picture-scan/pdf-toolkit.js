@@ -1,27 +1,6 @@
 import {EncryptedPDFError, PDFDocument, degrees} from './vendor/pdf-lib.min.js';
-import {getDocument, GlobalWorkerOptions} from './vendor/pdfjs/pdf.min.mjs';
-import {resources} from './vendor/pdfjs/resource-index.js';
+import {openPdf} from './pdf-viewer.js';
 import {buildPdf} from './pdf.js';
-
-const assets = new URL('./vendor/pdfjs/', import.meta.url);
-GlobalWorkerOptions.workerSrc = new URL('pdf.worker.min.mjs', assets).href;
-
-let resourceData;
-class LocalPdfResources {
-  async fetch({kind, filename}) {
-    const entry = resources[`${kind}/${filename}`];
-    if (!entry) throw new Error('PDF preview resource is unavailable.');
-    resourceData ??= fetch(new URL('resources.bin', assets)).then(response => {
-      if (!response.ok || !response.body) throw new Error('Could not load PDF preview resources.');
-      return new Response(response.body.pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();
-    }).catch(error => {
-      resourceData = null;
-      throw error;
-    });
-    const [offset, size] = entry;
-    return new Uint8Array(await resourceData).slice(offset, offset + size);
-  }
-}
 
 async function thumbnail(previewPage) {
   const initial = previewPage.getViewport({scale: 1});
@@ -55,16 +34,7 @@ export async function readPdf(file, room, onProgress) {
   if (count > room) throw new Error(`This PDF has ${count} pages, with room for ${room}. Split the source PDF or clear some pages first.`);
 
   const pages = [];
-  const preview = getDocument({
-    data: new Uint8Array(bytes.slice(0)),
-    BinaryDataFactory: LocalPdfResources,
-    useWorkerFetch: false,
-    useSystemFonts: false,
-    wasmUrl: assets.href,
-    iccUrl: new URL('iccs/', assets).href,
-    isEvalSupported: false,
-    maxImageSize: 30_000_000,
-  });
+  const preview = openPdf(bytes.slice(0));
   let documentPreview;
   try {
     documentPreview = await preview.promise;
