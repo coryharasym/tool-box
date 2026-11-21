@@ -1,5 +1,5 @@
-const CACHE = 'toolbox-shell-v2';
-const SHELL = ['./', './index.html', './style.css', './app.js', './audio.js', './vendor/qrcode.js', './script-import.js', './vendor/fflate.js',
+const CACHE = 'toolbox-shell-v3';
+const SHELL = ['./', './index.html', './style.css', './app.js', './audio.js', './vendor/qrcode.js', './script-import.js', './teleprompter-camera.js', './vendor/fflate.js',
   './picture-scan/pdf-viewer.js', './picture-scan/vendor/pdfjs/pdf.min.mjs', './picture-scan/vendor/pdfjs/pdf.worker.min.mjs',
   './picture-scan/vendor/pdfjs/resource-index.js', './picture-scan/vendor/pdfjs/resources.bin', './icon.svg', './manifest.webmanifest'];
 const urls = new Set(SHELL.map(path => new URL(path, self.registration.scope).href));

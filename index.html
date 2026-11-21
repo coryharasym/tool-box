@@ -97,7 +97,29 @@
       <label>Speed <input id="reader-speed" type="range" min="8" max="160" value="36"></label>
       <button id="close-reader">Close</button>
     </div>
-    <div id="reader-scroll" tabindex="0" aria-label="Script"><div id="reader-text"></div></div>
+    <div class="camera-controls" aria-label="Recording controls">
+      <button id="open-camera" type="button">Open camera</button>
+      <button id="record-video" class="record-button" type="button" hidden>Start recording</button>
+      <button id="close-camera" type="button" hidden>Turn off camera</button>
+      <span id="camera-status" role="status" aria-live="polite"></span>
+    </div>
+    <div class="reader-stage">
+      <div id="camera-stage" class="camera-stage" hidden>
+        <video id="camera-preview" autoplay muted playsinline aria-label="Camera preview"></video>
+      </div>
+      <div id="reader-scroll" tabindex="0" aria-label="Script"><div id="reader-text"></div></div>
+    </div>
+    <section id="recording-review" class="recording-review" aria-label="Latest recording" hidden>
+      <video id="recording-playback" controls playsinline preload="metadata" aria-label="Recorded video"></video>
+      <div class="stack">
+        <h2>Latest recording</h2>
+        <div class="actions">
+          <button id="download-video" type="button" class="primary">Download video</button>
+          <button id="share-video" type="button" hidden>Share video</button>
+        </div>
+        <p>Save the video before reloading or leaving Toolbox.</p>
+      </div>
+    </section>
   </dialog>
 </body>
 </html>

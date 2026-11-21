@@ -1,5 +1,6 @@
 import qrcode from './vendor/qrcode.js';
 import {bindAudioCutter} from './audio.js';
+import {bindTeleprompterCamera} from './teleprompter-camera.js';
 
 const get = id => document.getElementById(id);
 const sections = [...document.querySelectorAll('[data-page]')];
@@ -165,15 +166,17 @@ function tick(time) {
   }
 }
 
-function toggleScript() {
-  if (frame !== null) {
-    pauseScript();
-    return;
-  }
+function startScript() {
+  if (frame !== null) return;
   if (readerScroll.scrollTop >= readerScroll.scrollHeight - readerScroll.clientHeight - 1) readerScroll.scrollTop = 0;
   remainder = 0;
   play.textContent = 'Pause';
   frame = requestAnimationFrame(tick);
+}
+
+function toggleScript() {
+  if (frame === null) startScript();
+  else pauseScript();
 }
 
 settings.script.addEventListener('input', () => {
@@ -225,7 +228,16 @@ get('script-file').addEventListener('change', async event => {
       : 'This document could not be read.';
   }
 });
-get('close-reader').addEventListener('click', () => reader.close());
+const camera = bindTeleprompterCamera(get, {startScript, pauseScript, download});
+function closeReader() {
+  if (camera.stopForExit()) return;
+  reader.close();
+}
+get('close-reader').addEventListener('click', closeReader);
+reader.addEventListener('cancel', event => {
+  event.preventDefault();
+  closeReader();
+});
 reader.addEventListener('close', pauseScript);
 play.addEventListener('click', toggleScript);
 get('restart-script').addEventListener('click', () => {
