@@ -9,6 +9,10 @@ A browser app for Picture Scan, QR Sign Maker, Teleprompter, and Audio Clip Cutt
 - The Teleprompter lets you compose or paste a script, try a demo, or import DOCX, selectable-text PDF, TXT, and RTF files up to 40 MB. Typed and pasted scripts have no character cap. It supports adjustable text size and speed, a mirrored reading view, and keyboard controls in the reader. Space starts or pauses when focus is on the script, and Escape closes the reader or stops an active recording for review. In the reader, open the camera and start recording to capture camera video and microphone audio while the script scrolls. The script stays on-screen and is excluded from the video. Preview and save the latest take locally. Browser camera permissions and a secure context are required.
 - Audio Clip Cutter opens recordings supported by the browser and exports a selected interval as 16-bit PCM WAV. Add intervals from one or more recordings to the clip sequence, reorder them, then preview or download the joined WAV. The file input has a 100 MB limit to constrain browser memory use.
 
+## Install on iPhone
+
+Open Toolbox in Safari, use **Add to Home Screen**, and turn on **Open as Web App** if shown. Use the in-app Home, Back, and Forward buttons to move around Toolbox.
+
 ## Run and publish
 
 Run `npm start` and open `http://localhost:5173`. The repository contains static files and does not require a build step. For GitHub Pages, publish the root of `main`. The Toolbox shell is cached after a successful visit, and Picture Scan caches its own assets after it is first opened.

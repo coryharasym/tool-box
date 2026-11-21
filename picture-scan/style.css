@@ -21,6 +21,3 @@
   .pdf-page-preview{height:204px}
   .page-actions button{min-width:30px}
 }
-
-.toolbox-link{font-size:12px;text-underline-offset:3px;white-space:nowrap}
-@media(max-width:370px){.topbar{padding-inline:12px}.toolbox-link{font-size:10px}.privacy-badge{font-size:0}.privacy-badge .dot{display:none}}

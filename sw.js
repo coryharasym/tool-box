@@ -1,7 +1,8 @@
-const CACHE = 'toolbox-shell-v4';
+const CACHE = 'toolbox-shell-v5';
 const SHELL = ['./', './index.html', './style.css', './app.js', './audio.js', './vendor/qrcode.js', './script-import.js', './teleprompter-camera.js', './vendor/fflate.js',
   './picture-scan/pdf-viewer.js', './picture-scan/vendor/pdfjs/pdf.min.mjs', './picture-scan/vendor/pdfjs/pdf.worker.min.mjs',
-  './picture-scan/vendor/pdfjs/resource-index.js', './picture-scan/vendor/pdfjs/resources.bin', './icon.svg', './manifest.webmanifest'];
+  './picture-scan/vendor/pdfjs/resource-index.js', './picture-scan/vendor/pdfjs/resources.bin', './icon.svg', './manifest.webmanifest', './toolbox-nav.js', './toolbox-nav.css',
+  './apple-touch-icon.png', './icon-192.png', './icon-512.png'];
 const urls = new Set(SHELL.map(path => new URL(path, self.registration.scope).href));
 
 self.addEventListener('install', event => {

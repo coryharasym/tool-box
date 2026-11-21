@@ -3,12 +3,14 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f6f5f0"><meta name="description" content="Scan photos and organize PDF pages. Your documents stay on your device.">
-<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Picture Scan">
-<link rel="apple-touch-icon" href="apple-touch-icon.png"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="style.css">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="Toolbox">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png"><link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="manifest" href="../manifest.webmanifest"><link rel="stylesheet" href="style.css">
 <title>Picture Scan · PDF Toolkit</title>
+<link rel="stylesheet" href="../toolbox-nav.css">
+<script type="module" src="../toolbox-nav.js"></script>
 </head>
 <body>
-<header class="topbar"><a class="brand" href="./" aria-label="Picture Scan home"><span class="brand-icon" aria-hidden="true">⌑</span> picture<span>scan</span></a><a class="toolbox-link" href="../">← Toolbox</a><span class="privacy-badge"><span class="dot"></span> Only on your device</span></header>
+<header class="topbar"><a class="brand" href="./" aria-label="Picture Scan home"><span class="brand-icon" aria-hidden="true">⌑</span> picture<span>scan</span></a><span class="privacy-badge"><span class="dot"></span> Only on your device</span></header>
 <main>
 <section class="intro"><div class="eyebrow">FROM PAPER TO PDF</div><h1>A little less paper.<br><span>A lot more possibility.</span></h1><p>Scan paper, organize PDFs, and save both as one document.</p></section>
 <div class="workspace">
@@ -36,4 +38,11 @@
 <dialog id="pdfDialog" class="pdf-dialog"><button id="closePdf" class="icon-button float-close" aria-label="Close PDF options">×</button><div class="done-icon" aria-hidden="true">✓</div><div class="eyebrow">ALL TIDIED UP</div><h2>Your PDF is ready.</h2><p id="pdfSummary"></p><button id="sharePdf" class="button primary full">Share / Save to Files ↗</button><a id="openPdf" class="button secondary full" target="_blank" rel="noopener">Open PDF preview</a><a id="downloadPdf" class="button secondary full" download>Download PDF</a><p class="pdf-help">Tap <strong>Share / Save to Files</strong> above, then choose <strong>Save to Files</strong>. The shared item should say <strong>PDF Document</strong>. You can also open the PDF preview or download it.</p></dialog>
 <div id="status" class="status" role="status" aria-live="polite" hidden></div><div id="busy" class="busy" hidden><span class="spinner"></span><p id="busyText">Preparing your page…</p></div>
 <script type="module" src="app.js"></script>
+<nav class="toolbox-nav" aria-label="Toolbox navigation">
+  <div class="toolbox-nav-inner">
+    <button type="button" data-history="back" disabled><span aria-hidden="true">←</span> Back</button>
+    <a data-history="home" href="../">Home</a>
+    <button type="button" data-history="forward" disabled>Forward <span aria-hidden="true">→</span></button>
+  </div>
+</nav>
 </body></html>

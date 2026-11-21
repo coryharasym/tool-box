@@ -6,17 +6,21 @@
   <meta name="theme-color" content="#101f35">
   <meta name="description" content="Scan documents, print QR signs, read scripts, and trim audio.">
   <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Toolbox">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <title>Toolbox</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg">
   <link rel="stylesheet" href="style.css">
   <script type="module" src="app.js"></script>
+<link rel="stylesheet" href="./toolbox-nav.css">
+<script type="module" src="./toolbox-nav.js"></script>
 </head>
 <body>
   <header class="top"><div class="frame">
-    <a href="./" class="brand"><span class="brand-mark" aria-hidden="true">＋</span> Toolbox</a>
+    <a href="#home" class="brand"><span class="brand-mark" aria-hidden="true">＋</span> Toolbox</a>
     <nav aria-label="Tools">
-      <a href="./">Home</a><a href="#qr">QR signs</a><a href="#teleprompter">Teleprompter</a><a href="#audio">Audio cutter</a>
+      <a href="#qr">QR signs</a><a href="#teleprompter">Teleprompter</a><a href="#audio">Audio cutter</a>
     </nav>
   </div></header>
 
@@ -135,5 +139,12 @@
       </div>
     </section>
   </dialog>
+<nav class="toolbox-nav" aria-label="Toolbox navigation">
+  <div class="toolbox-nav-inner">
+    <button type="button" data-history="back" disabled><span aria-hidden="true">←</span> Back</button>
+    <a data-history="home" href="./">Home</a>
+    <button type="button" data-history="forward" disabled>Forward <span aria-hidden="true">→</span></button>
+  </div>
+</nav>
 </body>
 </html>
