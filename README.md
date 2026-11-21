@@ -16,3 +16,5 @@ Open Toolbox in Safari, use **Add to Home Screen**, and turn on **Open as Web Ap
 ## Run and publish
 
 Run `npm start` and open `http://localhost:5173`. The repository contains static files and does not require a build step. For GitHub Pages, publish the root of `main`. The Toolbox shell is cached after a successful visit, and Picture Scan caches its own assets after it is first opened.
+
+Video capture uses Mediabunny 1.66.2 (MPL 2.0) in supported browsers. The [Mediabunny npm release](https://registry.npmjs.org/mediabunny/-/mediabunny-1.66.2.tgz) includes the unmodified bundle and its source code under `src/`. The license is in `vendor/MEDIABUNNY-LICENSE.txt`.
