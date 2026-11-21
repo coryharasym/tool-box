@@ -1,3 +1,5 @@
+import {loadVideoEncoder, prepareVideoEncoder} from './video-capture.js';
+
 const formats = [
   'video/mp4',
   'video/webm;codecs=vp8,opus',
@@ -37,6 +39,9 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
   let take;
   let request = 0;
   let opening = false;
+  let encoding;
+  let skipEncoder = false;
+  let lastFailedFormat;
 
   function refresh() {
     stage.hidden = !stream;
@@ -46,13 +51,14 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
     open.disabled = opening || !!active;
     close.hidden = !stream || !!active;
     record.hidden = !stream;
-    record.disabled = !!active?.stopping;
+    record.disabled = opening || !!active?.stopping;
     record.textContent = active ? (active.stopping ? 'Finishing…' : 'Stop recording') : 'Start recording';
   }
 
   function releaseCamera() {
     request++;
     opening = false;
+    encoding = null;
     const current = stream;
     stream = null;
     preview.srcObject = null;
@@ -68,39 +74,60 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
     status.textContent = 'Finishing recording…';
     refresh();
 
-    // Allow the recorder to flush normally, but release the tracks if it stalls.
-    session.releaseTimer = setTimeout(() => {
-      if (session === active) releaseCamera();
-    }, 600);
+    if (session.encoder) {
+      session.finishTimer = setTimeout(() => failEncoding(session), 8000);
+      session.encoder.finish().then(blob => saveTake(session, blob), () => failEncoding(session));
+      return;
+    }
+
+    // Let the platform recorder flush before stopping the camera tracks.
     session.finishTimer = setTimeout(() => {
       session.interrupted = true;
-      saveTake(session);
-    }, 5000);
+      finishNative(session);
+    }, 6000);
     if (session.recorder.state === 'inactive') return;
-    try { session.recorder.requestData(); } catch {}
     try {
       session.recorder.stop();
     } catch {
       session.interrupted = true;
-      releaseCamera();
+      finishNative(session);
     }
   }
 
-  function saveTake(session) {
-    if (session !== active) return;
-    clearTimeout(session.releaseTimer);
+  function clearSession(session) {
+    clearTimeout(session.readyTimer);
     clearTimeout(session.finishTimer);
     pauseScript();
     active = null;
     releaseCamera();
-    if (session.chunks.length === 0) {
-      status.textContent = 'The browser returned no video. Open the camera and record a new take.';
+  }
+
+  function failEncoding(session) {
+    if (session !== active) return;
+    skipEncoder = true;
+    session.encoder?.cancel();
+    clearSession(session);
+    status.textContent = 'This recording could not be saved. Reopen the camera to try the alternate recorder.';
+  }
+
+  function finishNative(session) {
+    if (session !== active) return;
+    const mime = (session.chunks[0]?.type || session.recorder.mimeType || session.format || 'video/webm').split(';')[0];
+    if (session.chunks.length === 0) lastFailedFormat = mime;
+    saveTake(session, new Blob(session.chunks, {type: mime}));
+  }
+
+  function saveTake(session, blob) {
+    if (session !== active) return;
+    clearSession(session);
+    if (!blob.size) {
+      status.textContent = 'This recording format returned no video. Reopen the camera to try a different format.';
       return;
     }
-    const mime = (session.chunks[0].type || session.recorder.mimeType || 'video/webm').split(';')[0];
+    const mime = blob.type;
     const extension = mime === 'video/mp4' ? 'mp4' : 'webm';
     const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const file = new File(session.chunks, `teleprompter-${stamp}.${extension}`, {type: mime});
+    const file = new File([blob], `teleprompter-${stamp}.${extension}`, {type: mime});
     if (take) {
       URL.revokeObjectURL(take.url);
       URL.revokeObjectURL(take.downloadUrl);
@@ -122,7 +149,7 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
 
   async function openCamera() {
     if (opening || stream || active) return;
-    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder !== 'function') {
+    if (!navigator.mediaDevices?.getUserMedia || (typeof MediaRecorder !== 'function' && typeof VideoEncoder !== 'function')) {
       status.textContent = 'Video recording is unavailable in this browser. Try opening Toolbox in Safari or Chrome over HTTPS.';
       return;
     }
@@ -130,6 +157,7 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
     opening = true;
     status.textContent = 'Waiting for camera and microphone…';
     refresh();
+    const loadingEncoder = skipEncoder ? null : loadVideoEncoder();
     try {
       const cameraStream = await navigator.mediaDevices.getUserMedia(cameraConstraints);
       if (id !== request || !reader.open) {
@@ -152,6 +180,17 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
           }
         });
       }
+      refresh();
+      if (loadingEncoder) {
+        status.textContent = 'Preparing the camera…';
+        let limit;
+        const ready = await Promise.race([
+          prepareVideoEncoder(cameraStream, loadingEncoder).catch(() => null),
+          new Promise(resolve => { limit = setTimeout(() => resolve(null), 8000); }),
+        ]).finally(() => clearTimeout(limit));
+        if (id !== request || stream !== cameraStream) return;
+        encoding = ready;
+      }
       status.textContent = 'Camera ready.';
     } catch (error) {
       if (id === request) status.textContent = cameraError(error);
@@ -165,11 +204,42 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
 
   function startRecording() {
     if (!stream || active) return;
+    if (encoding) {
+      const session = {stopping: false, interrupted: false};
+      active = session;
+      status.textContent = 'Starting recording…';
+      refresh();
+      try {
+        session.encoder = encoding({
+          onReady() {
+            if (session !== active || session.stopping) return;
+            clearTimeout(session.readyTimer);
+            status.textContent = 'Recording';
+            startScript();
+          },
+          onError() { failEncoding(session); },
+        });
+        session.readyTimer = setTimeout(() => {
+          if (session === active && !session.stopping) failEncoding(session);
+        }, 7000);
+        return;
+      } catch {
+        active = null;
+        encoding = null;
+        skipEncoder = true;
+      }
+    }
+    if (typeof MediaRecorder !== 'function') {
+      status.textContent = 'No compatible video recorder is available in this browser.';
+      refresh();
+      return;
+    }
     const supported = formats.filter(type => MediaRecorder.isTypeSupported?.(type));
+    supported.sort((a, b) => Number(a.startsWith(lastFailedFormat)) - Number(b.startsWith(lastFailedFormat)));
     for (const mimeType of [...supported, undefined]) {
       try {
         const recorder = new MediaRecorder(stream, mimeType ? {mimeType, videoBitsPerSecond: 2_500_000} : undefined);
-        const session = {recorder, chunks: [], stopping: false, interrupted: false};
+        const session = {recorder, format: mimeType, chunks: [], stopping: false, interrupted: false};
         recorder.addEventListener('dataavailable', event => {
           if (event.data.size) session.chunks.push(event.data);
         });
@@ -178,7 +248,7 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
           session.interrupted = true;
           stopRecording();
         });
-        recorder.addEventListener('stop', () => saveTake(session), {once: true});
+        recorder.addEventListener('stop', () => finishNative(session), {once: true});
         recorder.start(1000);
         active = session;
         status.textContent = 'Recording';
@@ -212,6 +282,11 @@ export function bindTeleprompterCamera(get, {startScript, pauseScript}) {
     status.textContent = '';
   });
   window.addEventListener('pagehide', () => {
+    if (active?.encoder) {
+      active.encoder.cancel();
+      clearSession(active);
+      return;
+    }
     stopRecording();
     releaseCamera();
   });
