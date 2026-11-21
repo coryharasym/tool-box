@@ -11,7 +11,7 @@ A browser app for Picture Scan, QR Sign Maker, Teleprompter, and Audio Clip Cutt
 
 ## Install on iPhone
 
-Open Toolbox in Safari, use **Add to Home Screen**, and turn on **Open as Web App** if shown. Use the in-app Home, Back, and Forward buttons to move around Toolbox.
+Open Toolbox in Safari, use **Add to Home Screen**, and turn on **Open as Web App** if shown. Use the top navigation to return home, switch tools, or go back and forward through pages you visited.
 
 ## Run and publish
 

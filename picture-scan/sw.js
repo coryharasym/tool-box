@@ -1,4 +1,4 @@
-const CACHE='toolbox-picture-scan-app-v6';
+const CACHE='toolbox-picture-scan-app-v7';
 const ASSETS=['./','./index.html','./style.css','./app.js','./imaging.js','./processor.js','./pdf.js','./export.js','./pdf-toolkit.js','./pdf-viewer.js',
   './vendor/pdf-lib.min.js','./vendor/pdfjs/pdf.min.mjs','./vendor/pdfjs/pdf.worker.min.mjs',
   './vendor/pdfjs/resource-index.js','./vendor/pdfjs/resources.bin','./vendor/pdfjs/openjpeg_nowasm_fallback.js',

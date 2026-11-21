@@ -17,11 +17,24 @@
 <script type="module" src="./toolbox-nav.js"></script>
 </head>
 <body>
-  <header class="top"><div class="frame">
+  <header class="top toolbox-header"><div class="frame">
     <a href="#home" class="brand"><span class="brand-mark" aria-hidden="true">＋</span> Toolbox</a>
-    <nav aria-label="Tools">
-      <a href="#qr">QR signs</a><a href="#teleprompter">Teleprompter</a><a href="#audio">Audio cutter</a>
-    </nav>
+<nav class="toolbox-nav" aria-label="Toolbox navigation">
+  <div class="toolbox-nav-inner">
+    <button type="button" data-history="back" aria-label="Back" disabled><span aria-hidden="true">←</span><span class="history-label">Back</span></button>
+    <a data-history="home" href="./">Home</a>
+    <details class="toolbox-tools">
+      <summary>Tools</summary>
+      <ul class="toolbox-menu">
+        <li><a href="./picture-scan/">Picture Scan</a></li>
+        <li><a href="#qr">QR Sign Maker</a></li>
+        <li><a href="#teleprompter">Teleprompter</a></li>
+        <li><a href="#audio">Audio Clip Cutter</a></li>
+      </ul>
+    </details>
+    <button type="button" data-history="forward" aria-label="Forward" disabled><span class="history-label">Forward</span><span aria-hidden="true">→</span></button>
+  </div>
+</nav>
   </div></header>
 
   <main class="frame">
@@ -140,12 +153,6 @@
       </div>
     </section>
   </dialog>
-<nav class="toolbox-nav" aria-label="Toolbox navigation">
-  <div class="toolbox-nav-inner">
-    <button type="button" data-history="back" disabled><span aria-hidden="true">←</span> Back</button>
-    <a data-history="home" href="./">Home</a>
-    <button type="button" data-history="forward" disabled>Forward <span aria-hidden="true">→</span></button>
-  </div>
-</nav>
+
 </body>
 </html>

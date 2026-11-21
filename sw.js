@@ -1,4 +1,4 @@
-const CACHE = 'toolbox-shell-v6';
+const CACHE = 'toolbox-shell-v7';
 const SHELL = ['./', './index.html', './style.css', './app.js', './audio.js', './vendor/qrcode.js', './script-import.js', './teleprompter-camera.js', './vendor/fflate.js',
   './picture-scan/pdf-viewer.js', './picture-scan/vendor/pdfjs/pdf.min.mjs', './picture-scan/vendor/pdfjs/pdf.worker.min.mjs',
   './picture-scan/vendor/pdfjs/resource-index.js', './picture-scan/vendor/pdfjs/resources.bin', './icon.svg', './manifest.webmanifest', './toolbox-nav.js', './toolbox-nav.css',

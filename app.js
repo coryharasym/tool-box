@@ -9,10 +9,6 @@ function showTool() {
   const target = sections.find(section => '#' + section.id === location.hash) ?? sections[0];
   for (const section of sections) section.hidden = section !== target;
   document.title = target.id === 'home' ? 'Toolbox' : target.querySelector('h1').textContent + ' · Toolbox';
-  for (const link of document.querySelectorAll('.top nav a')) {
-    if (target.id === (link.hash.slice(1) || 'home')) link.setAttribute('aria-current', 'page');
-    else link.removeAttribute('aria-current');
-  }
   window.scrollTo(0, 0);
 }
 window.addEventListener('hashchange', showTool);
