@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101f35">
+  <meta name="description" content="Scan documents, print QR signs, read scripts, and trim audio.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Toolbox</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header class="top"><div class="frame">
+    <a href="./" class="brand"><span class="brand-mark" aria-hidden="true">＋</span> Toolbox</a>
+    <nav aria-label="Tools">
+      <a href="./">Home</a><a href="#qr">QR signs</a><a href="#teleprompter">Teleprompter</a><a href="#audio">Audio cutter</a>
+    </nav>
+  </div></header>
+
+  <main class="frame">
+    <section id="home" data-page>
+      <header class="intro"><h1>Toolbox</h1><p>Scan documents, make signs, read scripts, and trim recordings. Your files stay on your device.</p></header>
+      <div class="tools">
+        <a class="tool cyan" href="./picture-scan/"><span class="tile-icon" aria-hidden="true">⌑</span><h2>Picture Scan</h2><p>Scan paper, organize PDF pages, and combine documents.</p><span class="arrow" aria-hidden="true">↗</span></a>
+        <a class="tool blue" href="#qr"><span class="tile-icon" aria-hidden="true">▦</span><h2>QR Sign Maker</h2><p>Turn a link into a printable sign or a sheet of cards.</p><span class="arrow" aria-hidden="true">↗</span></a>
+        <a class="tool violet" href="#teleprompter"><span class="tile-icon" aria-hidden="true">▤</span><h2>Teleprompter</h2><p>Read a scrolling script at your own pace.</p><span class="arrow" aria-hidden="true">↗</span></a>
+        <a class="tool gold" href="#audio"><span class="tile-icon" aria-hidden="true">∿</span><h2>Audio Clip Cutter</h2><p>Preview a section of a recording and save it as a WAV file.</p><span class="arrow" aria-hidden="true">↗</span></a>
+      </div>
+    </section>
+
+    <section id="qr" data-page hidden>
+      <header class="intro"><h1>QR Sign Maker</h1><p>Print a full-page sign or six cards from any web link.</p></header>
+      <div class="work">
+        <form id="qr-form" class="panel stack">
+          <label>Link <input id="qr-url" required inputmode="url" placeholder="https://example.com" autocomplete="url" maxlength="1500"></label>
+          <label>Sign title <input id="qr-title" maxlength="70" placeholder="Scan to register"></label>
+          <label>Short note <input id="qr-note" maxlength="110" placeholder="Optional"></label>
+          <label>Print layout <select id="qr-layout"><option value="sign">One full-page sign</option><option value="cards">Six cards</option></select></label>
+          <button class="primary">Generate QR code</button>
+          <p id="qr-status" class="status" role="status"></p>
+          <div class="actions">
+            <button id="qr-print" type="button" disabled>Print sign or cards</button>
+            <button id="qr-save" type="button" disabled>Download QR image</button>
+          </div>
+        </form>
+        <div class="panel preview"><div id="qr-preview" class="sheet sign"><p class="placeholder">Your sign preview will appear here.</p></div></div>
+      </div>
+    </section>
+
+    <section id="teleprompter" data-page hidden>
+      <header class="intro"><h1>Teleprompter</h1><p>Paste your script and adjust the pace before you start reading.</p></header>
+      <div class="panel stack">
+        <label>Script <textarea id="script" rows="10" placeholder="Paste or type your script here"></textarea></label>
+        <div class="setting-grid">
+          <label>Text size <output id="size-display">48 px</output><input id="script-size" type="range" min="24" max="96" value="48"></label>
+          <label>Scroll speed <output id="speed-display">36 px/s</output><input id="script-speed" type="range" min="8" max="160" value="36"></label>
+        </div>
+        <label class="check"><input id="script-mirror" type="checkbox"> Mirror text</label>
+        <div class="actions"><button id="open-reader" class="primary" disabled>Open teleprompter</button></div>
+      </div>
+    </section>
+
+    <section id="audio" data-page hidden>
+      <header class="intro"><h1>Audio Clip Cutter</h1><p>Choose a recording, set the start and end, and export the clip as a WAV file.</p></header>
+      <div class="panel stack">
+        <label class="file-label">Choose audio file <input id="audio-file" type="file" accept="audio/*,.m4a,.mp3,.wav,.aac,.ogg,.flac,.webm,.mp4"></label>
+        <p id="audio-status" class="status" role="status"></p>
+        <div id="audio-editor" hidden class="stack">
+          <p id="audio-name" class="file-name"></p>
+          <audio id="audio-original" controls preload="metadata" aria-label="Original recording"></audio>
+          <div class="setting-grid">
+            <div class="trim-control"><label>Start (seconds) <input id="audio-start" type="number" min="0" step="any" value="0"></label><input id="start-slider" type="range" min="0" step=".01" value="0" aria-label="Clip start position"></div>
+            <div class="trim-control"><label>End (seconds) <input id="audio-end" type="number" min="0" step="any"></label><input id="end-slider" type="range" min="0" step=".01" aria-label="Clip end position"></div>
+          </div>
+          <p id="clip-length" class="file-name"></p>
+          <div class="actions"><button id="audio-preview" type="button">Preview clip</button><button id="audio-export" class="primary" type="button">Download WAV clip</button></div>
+          <audio id="audio-clipped" controls aria-label="Selected audio clip" hidden></audio>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="reader" aria-label="Teleprompter reader">
+    <div class="reader-controls">
+      <button id="play-script" class="primary">Start</button><button id="restart-script">Restart</button>
+      <label>Speed <input id="reader-speed" type="range" min="8" max="160" value="36"></label>
+      <button id="close-reader">Close</button>
+    </div>
+    <div id="reader-scroll" tabindex="0" aria-label="Script"><div id="reader-text"></div></div>
+  </dialog>
+</body>
+</html>
